@@ -1,12 +1,34 @@
 // Compile-only assertions. An unused @ts-expect-error fails `npm run typecheck`.
-import RegistrationEmail, { previewData } from "../examples/emails/register.email";
+import RegistrationEmail, {
+  previewData,
+} from "../examples/emails/register.email";
 import { createRegistrationEmail } from "../examples/notifications/registration-created.notification";
-import { email, renderPreview, type EmailData, type EmailInput } from "../src";
+import {
+  createMailer,
+  email,
+  renderPreview,
+  type EmailData,
+  type EmailInput,
+} from "../src";
 
 export async function checkTemplateTypes() {
-  const registration = createRegistrationEmail({ loadRegistration: async () => null });
-  const input: EmailInput<typeof registration> = { registrationId: "registration-123" };
+  const registration = createRegistrationEmail({
+    loadRegistration: async () => null,
+  });
+  const input: EmailInput<typeof registration> = {
+    registrationId: "registration-123",
+  };
   await registration.render(input);
+  const mailer = createMailer({
+    transport: { name: "mock", send: async () => ({ id: "mock" }) },
+  });
+  await mailer.send(registration, input);
+  // @ts-expect-error Sending requires the mapper input.
+  await mailer.send(registration, {});
+  // @ts-expect-error Sending preserves mapper field types.
+  await mailer.send(registration, { registrationId: 42 });
+  // @ts-expect-error Required sending input cannot be omitted.
+  await mailer.send(registration);
   registration.renderPreview(previewData);
   renderPreview(RegistrationEmail, previewData);
   // @ts-expect-error Preview takes display props, not mapper inputs.
@@ -20,8 +42,11 @@ export async function checkTemplateTypes() {
 
   // @ts-expect-error The mapper requires a registration ID.
   await registration.render({});
-  // @ts-expect-error The caller passes mapper inputs, not template props.
-  await registration.render({ firstName: "Ada", verificationUrl: "https://example.com" });
+  await registration.render({
+    // @ts-expect-error The caller passes mapper inputs, not template props.
+    firstName: "Ada",
+    verificationUrl: "https://example.com",
+  });
   // @ts-expect-error The mapper's registrationId parameter must be a string.
   await registration.render({ registrationId: 42 });
   // @ts-expect-error Required mapper inputs cannot be omitted.
@@ -35,8 +60,15 @@ export async function checkTemplateTypes() {
     name: "Type example",
     template: RegistrationEmail,
     mapToSend: async ({ count }: { count: number }) => ({
-      data: { firstName: count.toFixed(0), verificationUrl: "https://example.com" },
-      sendOptions: { subject: "Hello", to: "ada@example.com", branding: "Locus" },
+      data: {
+        firstName: count.toFixed(0),
+        verificationUrl: "https://example.com",
+      },
+      sendOptions: {
+        subject: "Hello",
+        to: "ada@example.com",
+        branding: "Locus",
+      },
       text: "Hello",
     }),
   });
@@ -53,18 +85,30 @@ export async function checkTemplateTypes() {
 
   email({
     ...reusable,
-    // @ts-expect-error Mapper must provide all required template props.
-    mapToSend: () => ({ data: { firstName: "Ada" }, sendOptions: { subject: "Hi" }, text: "Hi" }),
+    mapToSend: () => ({
+      // @ts-expect-error Mapper must provide all required template props.
+      data: { firstName: "Ada" },
+      sendOptions: { subject: "Hi" },
+      text: "Hi",
+    }),
   });
   email({
     ...reusable,
-    // @ts-expect-error Template prop types come from the referenced React view.
-    mapToSend: () => ({ data: { firstName: 42, verificationUrl: "https://example.com" }, sendOptions: { subject: "Hi" }, text: "Hi" }),
+    mapToSend: () => ({
+      // @ts-expect-error Template prop types come from the referenced React view.
+      data: { firstName: 42, verificationUrl: "https://example.com" },
+      sendOptions: { subject: "Hi" },
+      text: "Hi",
+    }),
   });
   email({
     ...reusable,
-    // @ts-expect-error Send options require a subject.
-    mapToSend: () => ({ data: { firstName: "Ada", verificationUrl: "https://example.com" }, sendOptions: { to: "ada@example.com" }, text: "Hi" }),
+    mapToSend: () => ({
+      data: { firstName: "Ada", verificationUrl: "https://example.com" },
+      // @ts-expect-error Send options require a subject.
+      sendOptions: { to: "ada@example.com" },
+      text: "Hi",
+    }),
   });
   email({
     ...reusable,

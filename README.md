@@ -101,15 +101,15 @@ if (message) {
 [registration definition](examples/notifications/registration-created.notification.ts)
 uses injected dependencies so it can be connected to a real data source or a test
 fixture. It chooses to validate collected data with Zod inside the mapper; this is
-application code, not a Locus Mail schema requirement. Nothing sends an email yet.
+application code, not a Locus Mail schema requirement.
 
 The template reference determines the required props of `data`: returning a missing
 or incorrectly typed prop is a TypeScript error. A template can be referenced by
 multiple definitions with different data loaders, subjects, or recipients.
 
 `sendOptions` requires a nonempty single-line `subject`; other application/provider
-fields retain their inferred types and pass through unchanged. This is metadata
-for a future sending adapter, not an implemented transport contract. `text` is an
+fields retain their inferred types and pass through unchanged to custom transports.
+`text` is an
 explicit plain-text body alongside the React-rendered HTML.
 
 ## The mapper owns readiness
@@ -233,7 +233,58 @@ it using Next.js and passes the validated consumer root and paths through
 three-column template browser, isolated email preview, and highlighted JSON props editor.
 `npm run dev` still develops this shell directly; `npm run preview -- --root .`
 exercises the consumer CLI locally. Next writes development caches inside the
-installed package. No sending transport is implemented.
+installed package.
+
+## Sending on the server
+
+Resend is the initial provider. Create the mailer in a server-owned module (for
+Next.js, add `import "server-only"` to that module). Never import the configured
+mailer from an email view or preview module, pass it to client props, or use a
+`NEXT_PUBLIC_` environment variable for credentials. The package does not read
+environment variables or initialize a provider when imported. Browser calls to
+the sending factories are rejected.
+
+```ts
+import { createMailer, createResendTransport } from "locus-mail";
+
+const mailer = createMailer({
+  from: "Locus <notifications@example.com>",
+  transport: createResendTransport({ apiKey: process.env.RESEND_API_KEY! }),
+});
+
+const result = await mailer.send(registration, {
+  registrationId: "registration-123",
+});
+```
+
+`registration` is a notification definition such as the registration example
+above. The second argument is inferred from its mapper. The mapper runs once and
+owns runtime validation and loading; previews still take fully loaded JSON props
+and never invoke it. Sending reuses preparation checks and the shared HTML renderer.
+
+Address precedence is mailer `from` default, notification `sendOptions`, then the
+optional third argument to `send`. That argument supports `from`, `to`, `cc`, `bcc`,
+and `replyTo`. Each recipient field accepts an address or a nonempty address array;
+`from` accepts a single address. Named mailboxes (`Name <address@example.com>`) are
+supported. A sender and at least one `to` recipient must resolve before rendering.
+The notification owns the subject and text; callers cannot override the bodies.
+
+Results are `{ status: "sent", templateId, provider, id }` or
+`{ status: "skipped", templateId }` when the mapper returns null. Sent means the
+provider accepted the request, not confirmed inbox delivery. `MailSendError.stage`
+identifies `preparation`, `validation`, `rendering`, or `provider`; its `cause`
+preserves mapper/schema/renderer/custom transport diagnostics. Resend errors expose
+the HTTP status with configuration guidance and redact response bodies and network
+errors. Treat application-owned causes as potentially sensitive in logs.
+
+The Resend adapter uses its HTTPS send endpoint with a 30-second timeout and forwards
+only the documented address fields, subject, HTML, and text. Extra metadata remains
+available to custom adapters through `message.sendOptions`. There are no automatic
+retries: a timeout may occur after acceptance, so check provider logs before retrying.
+
+To swap providers, supply a `MailTransport` with `name` and an async `send(message)`
+returning `{ id }`. For tests, use a mock transport or inject `fetch` into
+`createResendTransport`. The automated suite uses mocks and makes no delivery calls.
 
 Select a template in the searchable navigation to render its complete `previewData`.
 Edit the JSON props to update the preview; incomplete JSON and rendering errors
