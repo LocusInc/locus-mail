@@ -7,6 +7,21 @@ import test from "node:test";
 
 const { createRegistry } = createRequire(import.meta.url)("../bin/template-registry.cjs");
 
+test("example templates resolve Locus UI styles and render through discovery", async () => {
+  const root = new URL("..", import.meta.url).pathname;
+  const registry = createRegistry({ root, paths: ["examples/emails/*.email.tsx"] });
+  const result = await registry.refresh();
+
+  assert.equal(result.templates.length, 5);
+
+  for (const entry of result.templates) {
+    assert.equal(entry.status, "ready", entry.error);
+    const { html } = registry.render(entry.id);
+    assert.match(html, /Wally/);
+    assert.match(html, /<style>/);
+  }
+});
+
 test("discovery isolates errors, ignores artifacts, and reports missing fixtures and duplicates", async () => {
   const root = await mkdtemp(join(tmpdir(), "locus-discovery-"));
 

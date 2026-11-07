@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
-import { defineConfig, email, EmailLayout, renderPreview } from "../src";
+import { defineConfig, email, renderPreview } from "../src";
 
 test("the public entry provides configuration, authoring, and rendering", () => {
   assert.deepEqual(defineConfig({ root: ".", port: 3100 }), { root: ".", port: 3100 });
   assert.equal(typeof email, "function");
-  assert.match(renderPreview(EmailLayout, { children: "Hello" }).html, /Hello/);
+  assert.match(renderPreview(({ name }: { name: string }) => <html><body>Hello {name}</body></html>, { name: "Wally" }).html, /Hello Wally/);
 });
 
 test("CLI documents defaults and optional path customization", () => {

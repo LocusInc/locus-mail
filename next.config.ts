@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["locus-mail"],
-  /* config options here */
+  logging: {
+    incomingRequests: false,
+  },
   experimental: {
     agentFeedback: true,
   },

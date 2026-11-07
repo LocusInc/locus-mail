@@ -47,6 +47,7 @@ function createRegistry({ root, paths = ["**/*.email.tsx"] }) {
           const localRequire = createRequire(file);
           const packageRequire = createRequire(__filename);
           const load = (name) => /^react(?:-dom)?(?:\/|$)/.test(name) ? packageRequire(name) : localRequire(name);
+          load.resolve = (name, options) => /^react(?:-dom)?(?:\/|$)/.test(name) ? packageRequire.resolve(name, options) : localRequire.resolve(name, options);
           let loaded = modules.get(file);
 
           if (!loaded || loaded.fingerprint !== entry.fingerprint) {

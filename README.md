@@ -27,34 +27,34 @@ export default function WelcomeEmail({ firstName }: WelcomeProps) {
 ```
 
 Use ordinary HTML elements and reusable React components. The full
-[registration view](examples/emails/register.email.tsx) composes a shared layout.
+[registration view](examples/emails/register.email.tsx) owns its document layout.
 React escapes text and attribute values; do not manually HTML-escape JSX props.
 
-## Use the built-in layout
+## Own the email layout
 
-`EmailLayout` is exported by the package's source entry point for a quick document
-shell. It supplies `<html>`, `<head>`, UTF-8 and viewport metadata, and `<body>`;
-put your email content inside it.
+Each template owns its HTML document, metadata, and styling. Use ordinary React
+components for any layout pieces you choose to share.
 
 ```tsx
-import { EmailLayout } from "./src";
-
 export default function WelcomeEmail({ firstName }: { firstName: string }) {
   return (
-    <EmailLayout title="Welcome">
-      <h1>Welcome, {firstName}!</h1>
-      <p>Thanks for joining us.</p>
-    </EmailLayout>
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Welcome</title>
+      </head>
+      <body>
+        <h1>Welcome, {firstName}!</h1>
+        <p>Thanks for joining us.</p>
+      </body>
+    </html>
   );
 }
 ```
 
-The component accepts `children`, an optional document `title`, and an optional
-`lang` (defaults to `"en"`). `EmailLayoutProps` is exported too. The document title
-is separate from the actual email subject supplied by the notification's
-`sendOptions`. It adds no branding or styling, so you can compose your own content
-and shared components. See the registration template for the current local import
-path; consumers import the layout from `locus-mail`.
+The document title is separate from the email subject supplied by the
+notification's `sendOptions`.
 
 ## Define how the email collects its data
 
@@ -195,7 +195,7 @@ rendering does not wait for async components or Suspense; provide fully resolved
 props. Avoid `dangerouslySetInnerHTML` with untrusted data.
 
 The package builds CommonJS JavaScript and TypeScript declarations into `dist`.
-Import all public APIs from `locus-mail`, including `EmailLayout`, `email`,
+Import all public APIs from `locus-mail`, including `email`,
 `renderPreview`, `defineConfig`, and their types such as `MailConfig`.
 React and React DOM currently ship as dependencies alongside Next.js.
 
@@ -230,10 +230,18 @@ Preview compiler and TypeScript dependencies are included in the package.
 The CLI launches
 it using Next.js and passes the validated consumer root and paths through
 `LOCUS_MAIL_ROOT` and JSON-encoded `LOCUS_MAIL_PATHS`. It currently displays the
-starter page. The three-column preview UI is a subsequent task.
+three-column template browser, isolated email preview, and highlighted JSON props editor.
 `npm run dev` still develops this shell directly; `npm run preview -- --root .`
 exercises the consumer CLI locally. Next writes development caches inside the
 installed package. No sending transport is implemented.
+
+Select a template in the searchable navigation to render its complete `previewData`.
+Edit the JSON props to update the preview; incomplete JSON and rendering errors
+leave the last successful preview visible. Restore resets that template's sample
+values. Drafts, selection, column widths, preview width, and email appearance are
+stored locally in the browser; editing never writes to template source files.
+Fixture changes take precedence over saved drafts. Inspect, copy, or download the
+rendered HTML, and switch between fit, desktop, and mobile preview widths.
 
 ## Template discovery
 
