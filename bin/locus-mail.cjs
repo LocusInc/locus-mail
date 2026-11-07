@@ -5,6 +5,12 @@ const { existsSync } = require("node:fs");
 const { spawn } = require("node:child_process");
 
 async function main() {
+  const [major, minor] = process.versions.node.split(".").map(Number);
+
+  if (!((major === 20 && minor >= 19) || (major === 22 && minor >= 12) || major > 22)) {
+    throw new Error("Locus Mail requires Node.js 20.19+ (20.x) or 22.12+. Use a supported Node.js version to load preview dependencies.");
+  }
+
   const args = process.argv.slice(2);
 
   if (args.includes("--help")) {

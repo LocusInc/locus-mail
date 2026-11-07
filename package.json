@@ -14,7 +14,8 @@
   },
   "files": [
     "dist",
-    "bin",
+    "bin/locus-mail.cjs",
+    "bin/template-registry.cjs",
     "app",
     "public",
     "next.config.ts",
@@ -22,7 +23,7 @@
     "tsconfig.json"
   ],
   "engines": {
-    "node": ">=20.9"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -33,6 +34,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --import tsx --test tests/*.test.tsx",
+    "test:consumer": "node bin/check-consumer.cjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

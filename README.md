@@ -1,8 +1,9 @@
 # Locus Mail
 
 Reusable React email views, referenced by separate definitions that collect data
-and prepare messages. The author owns input requirements and validation. Package
-publishing, the full preview UI, and actual delivery are future tasks.
+and prepare messages. The author owns input requirements and validation. Includes
+a local preview browser and typed sending with a swappable Resend transport.
+Use Node.js 20.19+ (20.x) or 22.12+ for preview dependency compatibility.
 
 ## A template is a React component
 
@@ -236,6 +237,10 @@ exercises the consumer CLI locally. Next writes development caches inside the
 installed package.
 
 ## Sending on the server
+
+For an installable consumer example and repeatable tarball integration check, see
+[the consumer guide](examples/consumer/README.md). Run `npm run test:consumer` from
+this repository to verify the packaged workflow in a temporary separate project.
 
 Resend is the initial provider. Create the mailer in a server-owned module (for
 Next.js, add `import "server-only"` to that module). Never import the configured
