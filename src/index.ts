@@ -1,4 +1,6 @@
 export { z } from "zod";
+export { defineConfig } from "./config";
+export type { MailConfig } from "./config";
 export { EmailLayout } from "./components/email-layout";
 export type { EmailLayoutProps } from "./components/email-layout";
 export { email } from "./email";

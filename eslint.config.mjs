@@ -6,6 +6,10 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
+    files: ["bin/*.cjs"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
+  {
     files: ["**/*.email.tsx", "src/components/email-layout.tsx"],
     // Email templates and their document shell render outside the Next.js router.
     rules: { "@next/next/no-head-element": "off" },
@@ -16,6 +20,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "dist/**",
     "next-env.d.ts",
   ]),
 ]);

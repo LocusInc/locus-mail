@@ -2,7 +2,7 @@
 
 Reusable React email views, referenced by separate definitions that collect data
 and prepare messages. The author owns input requirements and validation. Package
-publishing, discovery, the preview server, and actual delivery are future tasks.
+publishing, discovery, the full preview UI, and actual delivery are future tasks.
 
 ## A template is a React component
 
@@ -54,7 +54,7 @@ The component accepts `children`, an optional document `title`, and an optional
 is separate from the actual email subject supplied by the notification's
 `sendOptions`. It adds no branding or styling, so you can compose your own content
 and shared components. See the registration template for the current local import
-path; published package exports will be configured with packaging.
+path; consumers import the layout from `locus-mail`.
 
 ## Define how the email collects its data
 
@@ -194,9 +194,46 @@ Templates are synchronous. Data loading may be async via `mapToSend`. React stat
 rendering does not wait for async components or Suspense; provide fully resolved
 props. Avoid `dangerouslySetInnerHTML` with untrusted data.
 
-Imports currently use the local `src` entry point. Public package exports, file
-discovery, the preview UI, and sending adapters are not implemented yet. The existing
-Next.js starter remains available with `npm run dev`.
+The package builds CommonJS JavaScript and TypeScript declarations into `dist`.
+Import all public APIs from `locus-mail`, including `EmailLayout`, `email`,
+`renderPreview`, `defineConfig`, and their types such as `MailConfig`.
+React and React DOM currently ship as dependencies alongside Next.js.
+
+Run `npm run build` for the library, `npm run build:preview` for the Next app,
+and `npm pack` to build and pack a local installable tarball.
+
+After installing the package, run:
+
+```sh
+npx locus-mail
+```
+
+No flags are required: the project root is the working directory, the discovery
+pattern is `**/*.email.tsx`, and the preview port is 4000. The optional `dev`
+subcommand remains supported as an alias. Optional customizations:
+
+- `--path 'src/emails/**/*.email.tsx'` replaces the default discovery glob, relative to the root.
+- `--root ./another-project` selects a different project directory.
+- `--port 3100` changes the preview server port.
+- `--config ./custom.config.mjs` selects a different configuration module.
+- `--help` displays CLI usage.
+
+Alternatively export `defineConfig({ root: ".", path: "src/**/*.email.tsx", port: 3100 })` as default from
+`locus-mail.config.mjs`. Import `defineConfig`
+from `locus-mail`. `--config` selects another module; CLI options override
+config values. Relative roots resolve from the invoking working directory;
+`--path` replaces the configured path or the default discovery pattern.
+
+The existing root `app/` is the bundled preview application shell. The installed
+CLI uses Next.js webpack compilation to support the app inside `node_modules`.
+Preview compiler and TypeScript dependencies are included in the package.
+The CLI launches
+it using Next.js and passes the validated consumer root and paths through
+`LOCUS_MAIL_ROOT` and JSON-encoded `LOCUS_MAIL_PATHS`. It currently displays the
+starter page. Discovery and the three-column preview UI are subsequent tasks.
+`npm run dev` still develops this shell directly; `npm run preview -- --root .`
+exercises the consumer CLI locally. Next writes development caches inside the
+installed package. No sending transport is implemented.
 
 ```sh
 npm install
