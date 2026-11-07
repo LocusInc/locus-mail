@@ -6,6 +6,9 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
+    rules: { curly: ["error", "all"] },
+  },
+  {
     files: ["bin/*.cjs"],
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },

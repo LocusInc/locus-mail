@@ -22,6 +22,7 @@ export function email<
       "Email definition id must be a lowercase slug, e.g. register.",
     );
   }
+
   if (!name.trim()) {
     throw new TypeError(`Email definition "${id}" must have a display name.`);
   }
@@ -30,7 +31,11 @@ export function email<
     // The author owns inputs, loading, and readiness. Never substitute preview
     // data, swallow failures, or render an email after a mapper failure.
     const prepared = await mapToSend(input);
-    if (prepared === null) return null;
+
+    if (prepared === null) {
+      return null;
+    }
+
     if (
       typeof prepared !== "object" ||
       typeof prepared.data !== "object" || prepared.data === null ||
@@ -51,19 +56,25 @@ export function email<
         );
       }
     }
+
     if (/[\r\n]/.test(prepared.sendOptions.subject)) {
       throw new TypeError(
         `Email definition "${id}" subject must not contain line breaks.`,
       );
     }
+
     return prepared;
   }
 
   function renderPrepared(
     prepared: PreparedEmail<Props, Options> | null,
   ): RenderedEmail<Options> | null {
-    if (prepared === null) return null;
+    if (prepared === null) {
+      return null;
+    }
+
     const { html } = renderPreview(template, prepared.data);
+
     return {
       subject: prepared.sendOptions.subject,
       html,

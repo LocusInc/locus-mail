@@ -10,9 +10,12 @@ export function renderPreview<Props extends object>(
   if (typeof props !== "object" || props === null) {
     throw new TypeError("Email preview requires a props object.");
   }
+
   const html = renderToStaticMarkup(createElement(template, props));
+
   if (!html.trim()) {
     throw new TypeError("Email template produced empty html.");
   }
+
   return { html };
 }

@@ -11,14 +11,19 @@ async function main() {
     console.log(
       "Usage: locus-mail [--path glob] [--root directory] [--port number] [--config file]\nDefaults: current directory, **/*.email.tsx, port 4000.\n--path replaces the discovery glob relative to the project root.\n--root selects another project directory.\n--port changes the preview server port.\n--config selects a config module (default: locus-mail.config.mjs).\n--help shows this help. Config supports root, path, and port; CLI flags take precedence.\nThe optional dev command is supported as an alias.",
     );
+
     return;
   }
 
-  if (args[0] === "dev") args.shift();
+  if (args[0] === "dev") {
+    args.shift();
+  }
+
   const options = {};
 
   while (args.length) {
     const flag = args.shift();
+
     if (
       !["--config", "--root", "--port", "--path"].includes(flag) ||
       !args.length ||
@@ -26,11 +31,13 @@ async function main() {
     ) {
       throw new Error(`Invalid option: ${flag}`);
     }
+
     const value = args.shift();
     options[flag.slice(2)] = value;
   }
 
   const configPath = resolve(options.config ?? "locus-mail.config.mjs");
+
   if (options.config && !existsSync(configPath)) {
     throw new Error(`Missing config: ${configPath}`);
   }
@@ -38,12 +45,14 @@ async function main() {
   const config = existsSync(configPath)
     ? (await import(pathToFileURL(configPath).href)).default
     : {};
+
   if (!config || typeof config !== "object") {
     throw new Error("Config must export an object.");
   }
 
   const root = resolve(options.root ?? config.root ?? process.cwd());
   const path = options.path ?? config.path ?? "**/*.email.tsx";
+
   if (typeof path !== "string" || !path.trim()) {
     throw new Error("path must be a nonempty glob string.");
   }
@@ -54,11 +63,16 @@ async function main() {
   if (!existsSync(root)) {
     throw new Error(`Missing project root: ${root}`);
   }
+
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error("port must be between 1 and 65535.");
   }
 
   const appRoot = resolve(__dirname, "..");
+  const registry = await require("./template-registry.cjs").startRegistry({
+    root,
+    paths,
+  });
 
   console.log(
     `Locus Mail preview: http://localhost:${port}\nProject: ${root}\nPaths: ${paths.join(", ")}`,
@@ -80,6 +94,7 @@ async function main() {
         ...process.env,
         LOCUS_MAIL_ROOT: root,
         LOCUS_MAIL_PATHS: JSON.stringify(paths),
+        LOCUS_MAIL_REGISTRY_URL: registry.url,
       },
     },
   );
@@ -89,11 +104,13 @@ async function main() {
   }
 
   child.on("error", (error) => {
+    registry.close();
     console.error(error.message);
     process.exitCode = 1;
   });
 
   child.on("exit", (code) => {
+    registry.close();
     process.exitCode = code ?? 1;
   });
 }

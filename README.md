@@ -2,7 +2,7 @@
 
 Reusable React email views, referenced by separate definitions that collect data
 and prepare messages. The author owns input requirements and validation. Package
-publishing, discovery, the full preview UI, and actual delivery are future tasks.
+publishing, the full preview UI, and actual delivery are future tasks.
 
 ## A template is a React component
 
@@ -183,9 +183,9 @@ production inputs, and production rendering never reads the `previewData` export
 Templates remain usable in production without sample exports.
 
 This replaces the earlier notification-level `preview` option and the preview API
-that accepted mapper inputs. The future discovery task will load each email file's
-component and `previewData`; discovery and the three-column UI are not implemented
-yet. Preview HTML contains static React output, without running effects or browser
+that accepted mapper inputs. Discovery loads each email file's component and
+`previewData`; the three-column UI is a separate task.
+Preview HTML contains static React output, without running effects or browser
 event handlers. Any code inside the React view itself must remain presentation-only.
 
 ## Scope and development
@@ -230,10 +230,39 @@ Preview compiler and TypeScript dependencies are included in the package.
 The CLI launches
 it using Next.js and passes the validated consumer root and paths through
 `LOCUS_MAIL_ROOT` and JSON-encoded `LOCUS_MAIL_PATHS`. It currently displays the
-starter page. Discovery and the three-column preview UI are subsequent tasks.
+starter page. The three-column preview UI is a subsequent task.
 `npm run dev` still develops this shell directly; `npm run preview -- --root .`
 exercises the consumer CLI locally. Next writes development caches inside the
 installed package. No sending transport is implemented.
+
+## Template discovery
+
+The CLI scans configured globs for `.email.tsx` and `.email.ts` modules (declaration
+files are excluded). The default glob selects TSX; use `--path '**/*.email.{ts,tsx}'`
+to include both. Default ignored directories are `node_modules`, `.git`, `.next`,
+`dist`, `build`, `out`, `coverage`, `generated`, `__generated__`, and `.turbo`.
+Symlink directories are not followed. Export the React component as default and
+ready-to-render JSON props as named `previewData`. No notification modules or
+mappers are discovered or invoked. Imported presentation helpers and fixtures are
+bundled with esbuild; keep module initialization free of database loading.
+
+Registry identities are `template:<root-relative path without final extension>`
+using forward slashes. They remain stable across edits and are independent of
+notification IDs. A `.ts` and `.tsx` sharing this identity both report a duplicate
+error. Invalid exports, compilation/import errors, and invalid fixture objects
+appear as per-file errors. Missing fixtures produce `missing-preview-data` with
+instructions to add `previewData`; the component remains usable in production
+and can be previewed with explicit props.
+
+The CLI runs a loopback registry service, refreshing every second and on requests.
+Local imported fixture/helper changes are rebundled along with additions, edits,
+and removals. `GET /api/templates` returns `{ revision, templates }`; each entry
+includes `id`, `source`, `status`, and `previewData` or `error`. Poll this endpoint
+and compare revisions to refresh a browser. `POST /api/templates` accepts
+`{ id, props? }` and returns `{ html }`, using the fixture when props are omitted.
+Explicit props replace fixtures completely. Render errors return `{ error }`
+with status 400 without stopping the server. `npm run dev` alone returns an
+actionable 503 from these endpoints; use `npm run preview` to run discovery.
 
 ```sh
 npm install

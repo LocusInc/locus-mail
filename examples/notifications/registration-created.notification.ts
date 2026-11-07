@@ -36,8 +36,12 @@ export function createRegistrationEmail({
       if (typeof registrationId !== "string" || !registrationId.trim()) {
         throw new Error("A registration ID is required.");
       }
+
       const registration = await loadRegistration(registrationId);
-      if (registration === null) return null;
+
+      if (registration === null) {
+        return null;
+      }
 
       const { recipientEmail, ...data } =
         registrationDataSchema.parse(registration);
