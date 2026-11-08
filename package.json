@@ -1,6 +1,6 @@
 {
   "name": "@locus-ui/mail",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Build, preview, and send React emails with a typed API and swappable providers.",
   "publishConfig": {
     "access": "public"
