@@ -8,19 +8,28 @@ async function proxy(request: Request) {
   }
 
   try {
+    const body = request.method === "POST" ? await request.text() : undefined;
+
+    if (body && JSON.parse(body).action === "send-test") {
+      if (request.headers.get("origin") !== new URL(request.url).origin || !request.headers.get("content-type")?.startsWith("application/json")) {
+        return Response.json({ error: "Test emails must be sent from this preview page." }, { status: 403 });
+      }
+    }
+
     const response = await fetch(url, {
       method: request.method,
-      body: request.method === "POST" ? await request.text() : undefined,
+      body,
+      headers: { Authorization: `Bearer ${process.env.LOCUS_MAIL_REGISTRY_TOKEN ?? ""}` },
       cache: "no-store",
     });
 
-    const body = await response.text();
+    const responseBody = await response.text();
 
     if (!response.ok) {
-      console.error(`Locus Mail: ${request.method} /api/templates failed (${response.status}): ${body}`);
+      console.error(`Locus Mail: ${request.method} /api/templates failed (${response.status}): ${responseBody}`);
     }
 
-    return new Response(body, {
+    return new Response(responseBody, {
       status: response.status,
       headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
     });

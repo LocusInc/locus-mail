@@ -78,6 +78,7 @@ async function main() {
   const registry = await require("./template-registry.cjs").startRegistry({
     root,
     paths,
+    previewSend: config.previewSend,
   });
 
   console.log(
@@ -101,6 +102,7 @@ async function main() {
         LOCUS_MAIL_ROOT: root,
         LOCUS_MAIL_PATHS: JSON.stringify(paths),
         LOCUS_MAIL_REGISTRY_URL: registry.url,
+        LOCUS_MAIL_REGISTRY_TOKEN: registry.token,
       },
     },
   );

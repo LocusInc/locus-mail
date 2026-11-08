@@ -28,7 +28,7 @@ export default function WelcomeEmail({ firstName }: WelcomeProps) {
 ```
 
 Use ordinary HTML elements and reusable React components. The full
-[registration view](examples/emails/register.email.tsx) owns its document layout.
+[registration view](examples/consumer/emails/register.email.tsx) owns its document layout.
 React escapes text and attribute values; do not manually HTML-escape JSX props.
 
 ## Own the email layout
@@ -99,7 +99,7 @@ if (message) {
 ```
 
 `loadUser` above is application code, not a package function. The complete
-[registration definition](examples/notifications/registration-created.notification.ts)
+[registration definition](examples/consumer/notifications/registration-created.notification.ts)
 uses injected dependencies so it can be connected to a real data source or a test
 fixture. It chooses to validate collected data with Zod inside the mapper; this is
 application code, not a Locus Mail schema requirement.
@@ -136,6 +136,12 @@ checks that the mapper supplies those props, but provides no runtime validation.
 Any validation, normalization, defaults, or business rules belong inside the mapper
 or its loaders. There are no package-provided `parse` / `safeParse` methods.
 
+There are no implicit production defaults. The registration mapper requires a
+first name, verification URL, and recipient email from its loader; missing values
+fail validation before rendering. Its optional organization name is omitted from
+HTML and text when absent. Authors can implement explicit defaults in their own
+mapper or schema. Preview fixtures never supply missing production values.
+
 `id` is a stable lowercase slug independent of the path; `name` is a nonempty
 display name. The implementation lives in `src/email.ts` and shared types in
 `src/template.ts`.
@@ -159,7 +165,7 @@ creating a notification or connecting a data source:
 import { renderPreview } from "./src";
 import RegistrationEmail, {
   previewData,
-} from "./examples/emails/register.email";
+} from "./examples/consumer/emails/register.email";
 
 const preview = renderPreview(RegistrationEmail, previewData);
 console.log(preview.html);
@@ -237,6 +243,43 @@ exercises the consumer CLI locally. Next writes development caches inside the
 installed package.
 
 ## Sending on the server
+
+### Sending a preview test
+
+The preview's right panel includes a recipient field and **Send**.
+It is disabled until you configure a sender and transport in the CLI config:
+
+```js
+// locus-mail.config.mjs (loaded by the CLI on the server only)
+import { defineConfig, createResendTransport } from "locus-mail";
+
+export default defineConfig({
+  previewSend:
+    process.env.RESEND_API_KEY && process.env.MAIL_FROM
+      ? {
+          from: process.env.MAIL_FROM,
+          transport: createResendTransport({
+            apiKey: process.env.RESEND_API_KEY,
+          }),
+        }
+      : undefined,
+});
+```
+
+Set those private environment variables in the shell that launches `locus-mail`,
+and restart the preview after configuration changes. Config files are executed
+before Next starts; the CLI does not automatically load consumer `.env` files.
+You can supply any `MailTransport`, including a mock, instead of Resend.
+
+Clicking sends the selected view rendered from the current JSON editor props to
+the entered address. The subject is `[Preview] template-name`; plain text contains
+the props as JSON. This does not call production notification mappers or loaders,
+use production recipients, or include the preview's light/dark display styling.
+Provider acceptance is shown with its message ID. Invalid JSON, render failures,
+or missing configuration prevent sending; provider failures show a safe error.
+Test sending is intended for trusted local development. The browser receives only
+configuration availability; the transport, sender configuration and credentials
+stay in the CLI process. Requests must originate from the preview page.
 
 For an installable consumer example and repeatable tarball integration check, see
 [the consumer guide](examples/consumer/README.md). Run `npm run test:consumer` from

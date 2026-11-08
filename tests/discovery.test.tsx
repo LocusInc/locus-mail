@@ -9,7 +9,7 @@ const { createRegistry } = createRequire(import.meta.url)("../bin/template-regis
 
 test("example templates resolve Locus UI styles and render through discovery", async () => {
   const root = new URL("..", import.meta.url).pathname;
-  const registry = createRegistry({ root, paths: ["examples/emails/*.email.tsx"] });
+  const registry = createRegistry({ root, paths: ["examples/consumer/emails/*.email.tsx"] });
   const result = await registry.refresh();
 
   assert.equal(result.templates.length, 5);

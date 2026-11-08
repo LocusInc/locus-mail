@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Locus Mail Preview",
   description: "Browse email templates and edit sample props locally.",
+  icons: {
+    icon: { url: "/locus-mail.svg", type: "image/svg+xml" },
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

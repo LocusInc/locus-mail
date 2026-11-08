@@ -9,6 +9,7 @@ import { TemplateSidebar } from "./preview/template-sidebar";
 
 export default function Browser() {
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [testSendConfigured, setTestSendConfigured] = useState(false);
   const [selected, setSelected] = useState("");
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [propsCollapsed, setPropsCollapsed] = useState(false);
@@ -87,6 +88,8 @@ export default function Browser() {
         }
 
         if (!stopped) {
+          setTestSendConfigured(result.testSendConfigured === true);
+
           if (revision !== result.revision) {
             revision = result.revision;
             setTemplates(result.templates);
@@ -189,6 +192,7 @@ export default function Browser() {
             key={`${template.id}:${template.fingerprint}:${JSON.stringify(template.previewData)}`}
             template={template}
             draft={draft}
+            testSendConfigured={testSendConfigured}
             navCollapsed={navCollapsed}
             onToggleNav={() => setNavCollapsed(!navCollapsed)}
             propsCollapsed={propsCollapsed}

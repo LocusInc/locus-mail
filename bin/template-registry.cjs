@@ -4,7 +4,7 @@ const { resolve, relative, dirname } = require("node:path");
 const { createRequire } = require("node:module");
 const { createElement } = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
-const { createHash } = require("node:crypto");
+const { createHash, randomBytes } = require("node:crypto");
 const { createServer } = require("node:http");
 
 const ignored = ["node_modules", ".git", ".next", "dist", "build", "out", "coverage", "generated", "__generated__", ".turbo"];
@@ -13,7 +13,7 @@ function propsObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function createRegistry({ root, paths = ["**/*.email.tsx"] }) {
+function createRegistry({ root, paths = ["**/*.email.tsx"], previewSend }) {
   root = resolve(root);
   let entries = [];
   let revision = "";
@@ -117,11 +117,38 @@ function createRegistry({ root, paths = ["**/*.email.tsx"] }) {
   }
 
   function snapshot() {
-    return { revision, templates: entries.map((entry) => Object.fromEntries(Object.entries(entry).filter(([key]) => key !== "component"))) };
+    return { revision, testSendConfigured: Boolean(previewSend), templates: entries.map((entry) => Object.fromEntries(Object.entries(entry).filter(([key]) => key !== "component"))) };
   }
 
   return {
     snapshot,
+    async sendTest(id, props, to) {
+      if (!previewSend) {
+        throw new Error("Test sending is not configured. Set previewSend in locus-mail.config.mjs and restart the preview.");
+      }
+
+      if (!propsObject(props)) {
+        throw new Error("Test sending requires the current JSON props object.");
+      }
+
+      const entry = entries.find((candidate) => candidate.id === id);
+
+      if (!entry || entry.status === "error") {
+        throw new Error("Select a valid template before sending a test email.");
+      }
+
+      const { createMailer, email, z } = require("../dist/index.js");
+      const recipient = z.email().parse(to);
+      const subject = `[Preview] ${entry.source.replace(/\.email\.tsx?$/, "").split("/").pop()}`;
+      const definition = email({
+        id: "preview-test",
+        name: "Preview test",
+        template: entry.component,
+        mapToSend: () => ({ data: props, sendOptions: { subject, to: recipient }, text: `${subject}\n\n${JSON.stringify(props, null, 2)}` }),
+      });
+
+      return createMailer(previewSend).send(definition, undefined);
+    },
     refresh() {
       if (!pending) {
         pending = refresh().finally(() => {
@@ -160,6 +187,11 @@ function createRegistry({ root, paths = ["**/*.email.tsx"] }) {
 }
 
 async function startRegistry(options) {
+  if (options.previewSend && (typeof options.previewSend.from !== "string" || !options.previewSend.from.trim() || typeof options.previewSend.transport?.send !== "function")) {
+    throw new Error("previewSend requires a from address and a transport with a send method.");
+  }
+
+  const token = randomBytes(32).toString("hex");
   const registry = createRegistry(options);
   await registry.refresh();
   const server = createServer(async (request, response) => {
@@ -182,8 +214,24 @@ async function startRegistry(options) {
           }
         }
 
-        const { id, props } = JSON.parse(body);
-        response.end(JSON.stringify(registry.render(id, props)));
+        const { action, id, props, to } = JSON.parse(body);
+
+        if (action === "send-test") {
+          if (request.headers.authorization !== `Bearer ${token}`) {
+            response.statusCode = 403;
+            response.end(JSON.stringify({ error: "Test sending requires the preview server." }));
+            return;
+          }
+
+          try {
+            response.end(JSON.stringify(await registry.sendTest(id, props, to)));
+          } catch {
+            response.statusCode = 400;
+            response.end(JSON.stringify({ error: "Test email was not confirmed. Check the recipient, current props, sender and provider configuration. Check provider logs before retrying." }));
+          }
+        } else {
+          response.end(JSON.stringify(registry.render(id, props)));
+        }
       } else {
         response.statusCode = 405; response.end();
       }
@@ -199,7 +247,7 @@ async function startRegistry(options) {
   const timer = setInterval(() => registry.refresh(), 1000);
   timer.unref();
 
-  return { url: `http://127.0.0.1:${server.address().port}`, close() {
+  return { url: `http://127.0.0.1:${server.address().port}`, token, close() {
     clearInterval(timer); server.close();
   } };
 }

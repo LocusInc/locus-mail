@@ -1,4 +1,4 @@
-import { email, z } from "../../src";
+import { email, z } from "../../../src";
 import RegistrationEmail from "../emails/register.email";
 
 // The application owns data collection and validation; the React view only

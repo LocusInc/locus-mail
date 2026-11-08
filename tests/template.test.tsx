@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { useId } from "react";
-import RegistrationEmail, { previewData } from "../examples/emails/register.email";
+import RegistrationEmail, {
+  previewData,
+} from "../examples/consumer/emails/register.email";
 import {
   createRegistrationEmail,
   type RegistrationData,
-} from "../examples/notifications/registration-created.notification";
+} from "../examples/consumer/notifications/registration-created.notification";
 import { email, renderPreview, z } from "../src";
 
 const input = { registrationId: "registration-123" };
@@ -40,7 +42,10 @@ function simpleEmail() {
 test("registration collects data separately from its React template", async () => {
   let loadedId: string | undefined;
   const definition = createRegistrationEmail({
-    loadRegistration: async (id) => { loadedId = id; return registration; },
+    loadRegistration: async (id) => {
+      loadedId = id;
+      return registration;
+    },
   });
   assert.equal(definition.template, RegistrationEmail);
   const rendered = await definition.render(input);
@@ -57,7 +62,9 @@ test("registration collects data separately from its React template", async () =
 test("prepare resolves props and send metadata without rendering", async () => {
   const definition = email({
     ...simpleEmail(),
-    template: () => { throw new Error("must not render"); },
+    template: () => {
+      throw new Error("must not render");
+    },
   });
   const prepared = await definition.prepare({ name: "Ada" });
   assert.ok(prepared);
@@ -72,7 +79,7 @@ test("one template reference can be reused by independent definitions", async ()
     id: "follow-up",
     mapToSend: ({ name }: { name: string }) => ({
       data: { name },
-      sendOptions: { subject: "A different subject", branding: "Locus" },
+      sendOptions: { subject: "A different subject", branding: "Locus Mail" },
       text: "A different message",
     }),
   });
@@ -80,7 +87,7 @@ test("one template reference can be reused by independent definitions", async ()
   const rendered = await second.render({ name: "Ada" });
   assert.ok(rendered);
   assert.equal(rendered.subject, "A different subject");
-  assert.equal(rendered.sendOptions.branding, "Locus");
+  assert.equal(rendered.sendOptions.branding, "Locus Mail");
   assert.match(rendered.html, /Hello, Ada/);
 });
 
@@ -88,23 +95,33 @@ test("template exports supply preview props without a notification", () => {
   const preview = renderPreview(RegistrationEmail, previewData);
   assert.ok(preview.html.includes(`Welcome, ${previewData.firstName}!`));
   assert.match(preview.html, /at Locus/);
-  assert.match(preview.html, /token=preview-only/);
+  assert.match(preview.html, /verify\/preview/);
   assert.deepEqual(Object.keys(preview), ["html"]);
 });
 
 test("definition preview bypasses mapToSend and data loaders", () => {
   let calls = 0;
   const definition = createRegistrationEmail({
-    loadRegistration: async () => { calls += 1; throw new Error("must not load preview data"); },
+    loadRegistration: async () => {
+      calls += 1;
+      throw new Error("must not load preview data");
+    },
   });
-  assert.deepEqual(definition.renderPreview(previewData), renderPreview(RegistrationEmail, previewData));
+  assert.deepEqual(
+    definition.renderPreview(previewData),
+    renderPreview(RegistrationEmail, previewData),
+  );
   assert.equal(calls, 0);
 });
 
 test("JSON-editor props replace samples without changing production inputs", async () => {
   const definition = registrationEmail();
   const originalPreviewData = structuredClone(previewData);
-  const edited = { ...previewData, firstName: "Grace", organizationName: undefined };
+  const edited = {
+    ...previewData,
+    firstName: "Grace",
+    organizationName: undefined,
+  };
   const preview = definition.renderPreview(edited);
   assert.match(preview.html, /Welcome, Grace!/);
   assert.ok(!preview.html.includes("at Locus"));
@@ -112,47 +129,138 @@ test("JSON-editor props replace samples without changing production inputs", asy
   const production = await definition.render(input);
   assert.ok(production);
   assert.match(production.html, /Welcome, Ada!/);
-  assert.ok(!production.html.includes("token=preview-only"));
+  assert.ok(!production.html.includes(previewData.verificationUrl));
 });
 
 test("preview requires props and reports component errors without invoking mapper", () => {
   // Simulates a missing fixture in a dynamically discovered email module.
-  // @ts-expect-error Preview props are required.
-  assert.throws(() => renderPreview(RegistrationEmail), /requires a props object/);
+  assert.throws(
+    // @ts-expect-error Preview props are required.
+    () => renderPreview(RegistrationEmail),
+    /requires a props object/,
+  );
   const failure = new Error("component failed");
   const definition = email({
     id: "broken-preview",
     name: "Broken preview",
-    template: () => { throw failure; },
-    mapToSend: () => { throw new Error("must not call mapper"); },
+    template: () => {
+      throw failure;
+    },
+    mapToSend: () => {
+      throw new Error("must not call mapper");
+    },
   });
-  assert.throws(() => definition.renderPreview({}), (error) => error === failure);
+  assert.throws(
+    () => definition.renderPreview({}),
+    (error) => error === failure,
+  );
 });
 
 test("the mapper decides what input is valid before loading", async () => {
   let calls = 0;
   const definition = createRegistrationEmail({
-    loadRegistration: async () => { calls += 1; return registration; },
+    loadRegistration: async () => {
+      calls += 1;
+      return registration;
+    },
   });
-  await assert.rejects(() => definition.render({ registrationId: "" }), /registration ID is required/);
+  await assert.rejects(
+    () => definition.render({ registrationId: "" }),
+    /registration ID is required/,
+  );
   assert.equal(calls, 0);
 });
 
 test("registration validates collected values before rendering", async () => {
-  for (const verificationUrl of ["not a URL", "/verify", "javascript:alert(1)", "ftp://example.com"]) {
-    await assert.rejects(() => registrationEmail({ ...registration, verificationUrl }).render(input), z.ZodError);
+  for (const verificationUrl of [
+    "not a URL",
+    "/verify",
+    "javascript:alert(1)",
+    "ftp://example.com",
+  ]) {
+    await assert.rejects(
+      () =>
+        registrationEmail({ ...registration, verificationUrl }).render(input),
+      z.ZodError,
+    );
   }
-  await assert.rejects(() => registrationEmail({ ...registration, firstName: " " }).render(input), z.ZodError);
-  await assert.rejects(() => registrationEmail({ ...registration, recipientEmail: "invalid" }).render(input), z.ZodError);
-  await assert.rejects(() => registrationEmail({ ...registration, firstName: "Ada\nBcc: other@example.com" }).render(input), z.ZodError);
+  await assert.rejects(
+    () => registrationEmail({ ...registration, firstName: " " }).render(input),
+    z.ZodError,
+  );
+  await assert.rejects(
+    () =>
+      registrationEmail({ ...registration, recipientEmail: "invalid" }).render(
+        input,
+      ),
+    z.ZodError,
+  );
+  await assert.rejects(
+    () =>
+      registrationEmail({
+        ...registration,
+        firstName: "Ada\nBcc: other@example.com",
+      }).render(input),
+    z.ZodError,
+  );
+});
+
+test("registration rejects missing required values without using preview defaults", async () => {
+  for (const field of ["firstName", "verificationUrl", "recipientEmail"]) {
+    const incomplete = { ...registration };
+    Reflect.deleteProperty(incomplete, field);
+
+    await assert.rejects(
+      () => registrationEmail(incomplete).render(input),
+      (error: unknown) => {
+        assert.ok(error instanceof z.ZodError);
+        assert.ok(error.issues.some((issue) => issue.path[0] === field));
+        return true;
+      },
+    );
+  }
+
+  const definition = registrationEmail();
+  await assert.rejects(
+    () => Reflect.apply(definition.render, undefined, [{}]),
+    /registration ID is required/,
+  );
+});
+
+test("optional registration values are omitted or rendered explicitly with no implicit defaults", async () => {
+  const withoutOrganization = await registrationEmail().render(input);
+  const withOrganization = await registrationEmail({
+    ...registration,
+    organizationName: "Example Company",
+  }).render(input);
+
+  assert.ok(withoutOrganization);
+  assert.ok(withOrganization);
+  assert.doesNotMatch(
+    withoutOrganization.html,
+    /at Locus|at Example Company|undefined/,
+  );
+  assert.doesNotMatch(
+    withoutOrganization.text,
+    /at Locus|at Example Company|undefined/,
+  );
+  assert.match(withOrganization.html, /at Example Company/);
+  assert.match(withOrganization.text, /at Example Company/);
 });
 
 test("React composes child components and escapes interpolated data", async () => {
   const organizationName = `<script>alert("x")</script> & 'Co'`;
-  const rendered = await registrationEmail({ ...registration, organizationName }).render(input);
+  const rendered = await registrationEmail({
+    ...registration,
+    organizationName,
+  }).render(input);
   assert.ok(rendered);
   assert.ok(!rendered.html.includes("<script>"));
-  assert.ok(rendered.html.includes("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#x27;Co&#x27;"));
+  assert.ok(
+    rendered.html.includes(
+      "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#x27;Co&#x27;",
+    ),
+  );
   assert.ok(rendered.text.includes(organizationName));
   const greeting = await simpleEmail().render({ name: "<Ada>" });
   assert.ok(greeting);
@@ -160,14 +268,21 @@ test("React composes child components and escapes interpolated data", async () =
 });
 
 test("returning null skips preparation and rendering", async () => {
-  const definition = createRegistrationEmail({ loadRegistration: async () => null });
+  const definition = createRegistrationEmail({
+    loadRegistration: async () => null,
+  });
   assert.equal(await definition.prepare(input), null);
   assert.equal(await definition.render(input), null);
-  assert.deepEqual(definition.renderPreview(previewData), renderPreview(RegistrationEmail, previewData));
+  assert.deepEqual(
+    definition.renderPreview(previewData),
+    renderPreview(RegistrationEmail, previewData),
+  );
   const skipped = email({
     id: "skip",
     name: "Skip",
-    template: () => { throw new Error("must not render skipped email"); },
+    template: () => {
+      throw new Error("must not render skipped email");
+    },
     mapToSend: () => null,
   });
   assert.equal(await skipped.render(), null);
@@ -177,10 +292,20 @@ test("loader failures propagate without rendering", async () => {
   const failure = new Error("lookup failed");
   let renders = 0;
   const definition = email({
-    ...createRegistrationEmail({ loadRegistration: async () => { throw failure; } }),
-    template: () => { renders += 1; return <p>Should not render</p>; },
+    ...createRegistrationEmail({
+      loadRegistration: async () => {
+        throw failure;
+      },
+    }),
+    template: () => {
+      renders += 1;
+      return <p>Should not render</p>;
+    },
   });
-  await assert.rejects(() => definition.render(input), (error) => error === failure);
+  await assert.rejects(
+    () => definition.render(input),
+    (error) => error === failure,
+  );
   assert.equal(renders, 0);
 });
 
@@ -223,7 +348,10 @@ test("an email can have a no-argument mapper and needs no input", async () => {
   const rendered = await definition.render();
   assert.ok(rendered);
   assert.equal(rendered.text, "Hello, everyone");
-  assert.match(definition.renderPreview({ name: "Preview" }).html, /Hello, Preview/);
+  assert.match(
+    definition.renderPreview({ name: "Preview" }).html,
+    /Hello, Preview/,
+  );
 });
 
 test("identity and display name are checked", () => {
@@ -237,15 +365,26 @@ test("empty output and subject header injection fail clearly", async () => {
   for (const subject of [" ", "Hello\r\nBcc: victim@example.com"]) {
     const definition = email({
       ...simpleEmail(),
-      mapToSend: ({ name }: { name: string }) => ({ data: { name }, sendOptions: { subject }, text: "Hello" }),
+      mapToSend: ({ name }: { name: string }) => ({
+        data: { name },
+        sendOptions: { subject },
+        text: "Hello",
+      }),
     });
     await assert.rejects(() => definition.render({ name: "Ada" }), TypeError);
   }
   const emptyText = email({
     ...simpleEmail(),
-    mapToSend: ({ name }: { name: string }) => ({ data: { name }, sendOptions: { subject: "Hello" }, text: " " }),
+    mapToSend: ({ name }: { name: string }) => ({
+      data: { name },
+      sendOptions: { subject: "Hello" },
+      text: " ",
+    }),
   });
-  await assert.rejects(() => emptyText.prepare({ name: "Ada" }), /invalid text/);
+  await assert.rejects(
+    () => emptyText.prepare({ name: "Ada" }),
+    /invalid text/,
+  );
   const emptyView = email({ ...simpleEmail(), template: () => null });
   await assert.rejects(() => emptyView.render({ name: "Ada" }), /empty html/);
 });

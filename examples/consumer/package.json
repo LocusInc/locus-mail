@@ -6,6 +6,7 @@
     "preview": "locus-mail"
   },
   "dependencies": {
+    "@locus-ui/components": "^0.1.19",
     "locus-mail": "file:../.."
   },
   "devDependencies": {

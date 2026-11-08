@@ -4,7 +4,8 @@ This is a separate application that imports only the public `locus-mail` package
 Use Node.js 20.19+ (20.x) or 22.12+; older runtimes cannot load the preview's
 CommonJS-to-ES-module CSS dependency chain.
 Its dependencies must be installed before its TypeScript files can compile; the
-repository's root typecheck intentionally excludes it.
+repository's root typecheck excludes its standalone sending checks and mapper,
+while including the shared email views used by the rendering tests.
 
 From the repository root, run:
 
@@ -13,8 +14,13 @@ npm run test:consumer
 ```
 
 The check builds and packs the library, copies this example into a fresh temporary
-directory outside the repository, and installs the tarball with npm. It compiles
+directory outside the repository, and installs the tarball with development
+dependencies omitted. Tailwind and its PostCSS plugin are required
+dependencies of `locus-mail`; consumers do not need to install or configure them
+for the preview. The check verifies that dependency contract and generated layout CSS.
+It compiles
 against the installed declarations, checks mock sending and runtime failures,
+and configures a mock preview transport to verify test sending through the preview API,
 starts the installed CLI, checks discovery and preview edits through its HTTP API,
 and changes the template fixture to verify refreshed props and HTML. It stops the
 preview and removes the temporary directory on completion. Installation requires
@@ -42,11 +48,17 @@ Then run the commands above from `examples/consumer`. Installing the example's
 dependency also resolves its editor diagnostics; the repository's root install
 does not install this separate application's dependencies. Its `NodeNext`
 configuration resolves package exports while emitting CommonJS for this example.
+The local npm configuration installs file dependencies as packages rather than
+symlinks, avoiding a circular link back into the parent repository. Reinstall
+the local dependency after changing library or preview code.
 
 The example manifest uses a local package dependency for development. To verify a
 release candidate, first run `npm pack` at the library root, then install that
 tarball in the consumer with `npm install /absolute/path/locus-mail-0.1.0.tgz`.
 The automated check always installs a tarball rather than a workspace link.
+
+The preview includes registration, invitation, password-changed, receipt, and
+reset-password emails. Select any template in the sidebar to edit its own props.
 
 `emails/register.email.tsx` exports a synchronous React view and fully loaded
 `previewData`. JSX files use `.tsx`; a `.email.ts` file can use `createElement`,
@@ -65,7 +77,19 @@ npm run preview -- --root . --path 'emails/**/*.email.tsx' --port 4111
 
 ## Provider setup
 
-The example uses mocks exclusively. For production sending, create the configured
+To enable **Send** in the preview, copy `.env.example` to `.env.local`
+in this consumer directory (if `.env.local` does not already exist). Set
+`RESEND_API_KEY` to your private Resend API key and `MAIL_FROM` to a sender address
+on your verified Resend domain, optionally formatted as `Locus <mail@your-domain.com>`.
+Do not paste the API key into the preview or commit `.env.local`.
+
+The consumer config loads `.env.local` on the server before configuring the preview
+transport. Shell environment values take precedence. Restart `npm run preview`
+after changing either value. Until both are set, the send button remains disabled.
+Once configured, enter the test recipient in the preview and click **Send**;
+this sends a real email through Resend using the current editor props.
+
+The automated checks use mocks exclusively. For production sending, create the configured
 mailer in a server module, with the Resend key in a private environment variable:
 
 ```ts

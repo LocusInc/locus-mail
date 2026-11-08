@@ -33,6 +33,7 @@
     "preview": "node bin/locus-mail.cjs",
     "start": "next start",
     "lint": "eslint",
+    "pretest": "npm run build",
     "test": "node --import tsx --test tests/*.test.tsx",
     "test:consumer": "node bin/check-consumer.cjs",
     "typecheck": "tsc --noEmit"

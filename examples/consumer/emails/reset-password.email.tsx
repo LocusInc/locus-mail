@@ -1,32 +1,32 @@
 import { Box, Text } from "@locus-ui/components";
 import { emailStyles } from "./email-styles";
 
-export interface InvitationEmailProps {
+export interface ResetPasswordEmailProps {
   firstName: string;
-  inviterName: string;
+  resetUrl: string;
+  expiresInMinutes: number;
   organizationName: string;
-  invitationUrl: string;
 }
 
 export const previewData = {
   firstName: "Wally",
-  inviterName: "Alex",
-  organizationName: "Locus",
-  invitationUrl: "https://example.com/invitation?token=preview-only",
-} satisfies InvitationEmailProps;
+  resetUrl: "https://example.com/reset-password?token=preview-only",
+  expiresInMinutes: 30,
+  organizationName: "Locus Mail",
+} satisfies ResetPasswordEmailProps;
 
-export default function InvitationEmail({
+export default function ResetPasswordEmail({
   firstName,
-  inviterName,
+  resetUrl,
+  expiresInMinutes,
   organizationName,
-  invitationUrl,
-}: InvitationEmailProps) {
+}: ResetPasswordEmailProps) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>You’re invited</title>
+        <title>Reset your password</title>
         <style>{emailStyles}</style>
       </head>
       <body>
@@ -38,10 +38,14 @@ export default function InvitationEmail({
             style={{ maxWidth: 600, fontFamily: "Arial, sans-serif" }}
           >
             <Text as="h1" size="xl" weight="bold" mt="0" mb="6">
-              You’re invited to {organizationName}
+              Reset your password
             </Text>
             <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              Hi {firstName}, {inviterName} has invited you to join their team.
+              Hi {firstName},
+            </Text>
+            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
+              We received a request to reset the password for your{" "}
+              {organizationName} account.
             </Text>
             <Text
               mt="0"
@@ -49,7 +53,7 @@ export default function InvitationEmail({
               style={{ lineHeight: 1.7, textAlign: "center" }}
             >
               <a
-                href={invitationUrl}
+                href={resetUrl}
                 style={{
                   display: "inline-block",
                   backgroundColor: "#fc7f0a",
@@ -60,12 +64,15 @@ export default function InvitationEmail({
                   fontWeight: 700,
                 }}
               >
-                Accept invitation
+                Reset password
               </a>
             </Text>
             <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              If you weren’t expecting this invitation, you can ignore this
-              email.
+              This link expires in {expiresInMinutes} minutes.
+            </Text>
+            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
+              If you did not request a password reset, you can ignore this
+              email. Your password will stay the same.
             </Text>
           </Box>
         </div>

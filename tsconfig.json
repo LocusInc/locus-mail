@@ -30,5 +30,11 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "examples/consumer"]
+  "exclude": [
+    "node_modules",
+    "examples/consumer/check.ts",
+    "examples/consumer/registration.ts",
+    "examples/consumer/build",
+    "examples/consumer/node_modules"
+  ]
 }

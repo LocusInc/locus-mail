@@ -1,7 +1,8 @@
-import { CopyIcon } from "./icons/copy-icon";
-import { DownloadIcon } from "./icons/download-icon";
 import { Box, Button, Flex, Grid, Text } from "@locus-ui/components";
 import { useState } from "react";
+import { CopyIcon } from "./icons/copy-icon";
+import { DownloadIcon } from "./icons/download-icon";
+import { TestSend } from "./test-send";
 
 export function PreviewTools({
   source,
@@ -10,6 +11,8 @@ export function PreviewTools({
   error,
   busy,
   duration,
+  templateId,
+  testSendConfigured,
 }: {
   source: string;
   draft: string;
@@ -17,6 +20,8 @@ export function PreviewTools({
   error: string;
   busy: boolean;
   duration: number | null;
+  templateId: string;
+  testSendConfigured: boolean;
 }) {
   const [message, setMessage] = useState("");
   let valid = false;
@@ -54,22 +59,12 @@ export function PreviewTools({
 
   return (
     <Grid gap="6" mt="6">
-      <Box
-        pt="5"
-        className="border-t border-[rgb(var(--border-1))]"
-        role="region"
-        aria-label="Validation"
-      >
-        <Text as="h2" size="13px" weight="semibold" mt="0" mb="3">
-          Validation
-        </Text>
-
-        <Text size="sm" my="2" mx="0" role={error ? "alert" : "status"}>
-          {!valid
-            ? "Enter a valid JSON props object."
-            : error || (busy ? "Rendering…" : "Props rendered successfully.")}
-        </Text>
-      </Box>
+      <TestSend
+        templateId={templateId}
+        draft={draft}
+        configured={testSendConfigured}
+        disabled={!valid || busy || Boolean(error) || !html}
+      />
 
       <Box
         pt="5"
@@ -93,7 +88,10 @@ export function PreviewTools({
 
         <Flex gap="2">
           <Button variant="outlined" size="sm" disabled={!html} onClick={copy}>
-            <Flex align="center" gap="2"><CopyIcon /><Text as="span">Copy HTML</Text></Flex>
+            <Flex align="center" gap="2">
+              <CopyIcon />
+              <Text as="span">Copy HTML</Text>
+            </Flex>
           </Button>
 
           <Button
@@ -102,7 +100,10 @@ export function PreviewTools({
             disabled={!html}
             onClick={download}
           >
-            <Flex align="center" gap="2"><DownloadIcon /><Text as="span">Download</Text></Flex>
+            <Flex align="center" gap="2">
+              <DownloadIcon />
+              <Text as="span">Download</Text>
+            </Flex>
           </Button>
         </Flex>
       </Box>
@@ -112,6 +113,23 @@ export function PreviewTools({
           {message}
         </Text>
       )}
+
+      <Box
+        pt="5"
+        className="border-t border-[rgb(var(--border-1))]"
+        role="region"
+        aria-label="Validation"
+      >
+        <Text as="h2" size="13px" weight="semibold" mt="0" mb="3">
+          Validation
+        </Text>
+
+        <Text size="sm" my="2" mx="0" role={error ? "alert" : "status"}>
+          {!valid
+            ? "Enter a valid JSON props object."
+            : error || (busy ? "Rendering…" : "Props rendered successfully.")}
+        </Text>
+      </Box>
     </Grid>
   );
 }

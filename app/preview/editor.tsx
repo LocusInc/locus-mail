@@ -15,6 +15,7 @@ export function Editor({
   onToggleNav,
   propsCollapsed,
   onToggleProps,
+  testSendConfigured,
 }: {
   template: Template;
   draft: string;
@@ -23,6 +24,7 @@ export function Editor({
   onToggleNav: () => void;
   propsCollapsed: boolean;
   onToggleProps: () => void;
+  testSendConfigured: boolean;
 }) {
   const [appearance, setAppearance] = useState<"light" | "dark">("dark");
   const original = JSON.stringify(template.previewData, null, 2);
@@ -212,6 +214,8 @@ export function Editor({
 
         <PropsEditor draft={draft} original={original} onChange={onDraftChange}>
           <PreviewTools
+            templateId={template.id}
+            testSendConfigured={testSendConfigured}
             source={template.source}
             draft={draft}
             html={html}

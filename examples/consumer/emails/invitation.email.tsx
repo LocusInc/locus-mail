@@ -1,31 +1,32 @@
 import { Box, Text } from "@locus-ui/components";
 import { emailStyles } from "./email-styles";
 
-export interface RegistrationEmailProps {
+export interface InvitationEmailProps {
   firstName: string;
-  verificationUrl: string;
-  organizationName?: string;
+  inviterName: string;
+  organizationName: string;
+  invitationUrl: string;
 }
 
-/** Ready-to-render development props, separate from notification inputs. */
 export const previewData = {
   firstName: "Wally",
-  verificationUrl: "https://example.com/verify?token=preview-only",
-  organizationName: "Locus",
-} satisfies RegistrationEmailProps;
+  inviterName: "Alex",
+  organizationName: "Locus Mail",
+  invitationUrl: "https://example.com/invitation?token=preview-only",
+} satisfies InvitationEmailProps;
 
-/** A reusable view: no data fetching or send options. */
-export default function RegistrationEmail({
+export default function InvitationEmail({
   firstName,
-  verificationUrl,
+  inviterName,
   organizationName,
-}: RegistrationEmailProps) {
+  invitationUrl,
+}: InvitationEmailProps) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Confirm your registration</title>
+        <title>You’re invited</title>
         <style>{emailStyles}</style>
       </head>
       <body>
@@ -37,12 +38,10 @@ export default function RegistrationEmail({
             style={{ maxWidth: 600, fontFamily: "Arial, sans-serif" }}
           >
             <Text as="h1" size="xl" weight="bold" mt="0" mb="6">
-              Welcome, {firstName}!
+              You’re invited to {organizationName}
             </Text>
             <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              Thanks for registering
-              {organizationName ? ` at ${organizationName}` : ""}. Confirm your
-              email address to get started.
+              Hi {firstName}, {inviterName} has invited you to join their team.
             </Text>
             <Text
               mt="0"
@@ -50,7 +49,7 @@ export default function RegistrationEmail({
               style={{ lineHeight: 1.7, textAlign: "center" }}
             >
               <a
-                href={verificationUrl}
+                href={invitationUrl}
                 style={{
                   display: "inline-block",
                   backgroundColor: "#fc7f0a",
@@ -61,11 +60,12 @@ export default function RegistrationEmail({
                   fontWeight: 700,
                 }}
               >
-                Confirm registration
+                Accept invitation
               </a>
             </Text>
             <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              If you did not register, you can ignore this email.
+              If you weren’t expecting this invitation, you can ignore this
+              email.
             </Text>
           </Box>
         </div>

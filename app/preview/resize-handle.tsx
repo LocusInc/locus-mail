@@ -55,7 +55,7 @@ export function ResizeHandle({
       align="center"
       justify="center"
       ref={handle}
-      className={`group absolute inset-y-0 z-5 w-4 cursor-col-resize touch-none max-[1050px]:hidden ${side === "left" ? "left-[calc(var(--nav-width,280px)-8px)] group-data-[nav-collapsed=true]/main:hidden" : "right-[calc(var(--props-width,330px)-8px)] group-data-[props-collapsed=true]/workspace:hidden"}`}
+      className={`group absolute inset-y-0 z-5 w-4 cursor-col-resize touch-none max-[1050px]:hidden! ${side === "left" ? "left-[calc(var(--nav-width,280px)-8px)] group-data-[nav-collapsed=true]/main:hidden" : "right-[calc(var(--props-width,330px)-8px)] group-data-[props-collapsed=true]/workspace:hidden"}`}
       role="separator"
       tabIndex={0}
       aria-label={label}

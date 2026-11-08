@@ -1,8 +1,8 @@
 // Compile-only assertions. An unused @ts-expect-error fails `npm run typecheck`.
 import RegistrationEmail, {
   previewData,
-} from "../examples/emails/register.email";
-import { createRegistrationEmail } from "../examples/notifications/registration-created.notification";
+} from "../examples/consumer/emails/register.email";
+import { createRegistrationEmail } from "../examples/consumer/notifications/registration-created.notification";
 import {
   createMailer,
   email,
@@ -67,7 +67,7 @@ export async function checkTemplateTypes() {
       sendOptions: {
         subject: "Hello",
         to: "ada@example.com",
-        branding: "Locus",
+        branding: "Locus Mail",
       },
       text: "Hello",
     }),
