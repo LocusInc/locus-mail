@@ -39,7 +39,7 @@
     "pretest": "npm run build",
     "test": "node --import tsx --test tests/*.test.tsx",
     "test:consumer": "node bin/check-consumer.cjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@locus-ui/components": "^0.1.19",
