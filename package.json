@@ -1,6 +1,7 @@
 {
   "name": "@locus-ui/mail",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "description": "Build, preview, and send React emails with a typed API and swappable providers.",
   "publishConfig": {
     "access": "public"
   },
@@ -39,7 +40,8 @@
     "pretest": "npm run build",
     "test": "node --import tsx --test tests/*.test.tsx",
     "test:consumer": "node bin/check-consumer.cjs",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "publish": "./publish.sh"
   },
   "dependencies": {
     "@locus-ui/components": "^0.1.19",
