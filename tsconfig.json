@@ -32,9 +32,10 @@
   ],
   "exclude": [
     "node_modules",
-    "examples/consumer/check.ts",
-    "examples/consumer/registration.ts",
-    "examples/consumer/build",
-    "examples/consumer/node_modules"
+    "example/*.ts",
+    "example/emails/**/send-*-email.ts",
+    "example/emails/mailer.ts",
+    "example/build",
+    "example/node_modules"
   ]
 }

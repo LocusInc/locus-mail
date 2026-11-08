@@ -1,38 +1,29 @@
 import { Box, Text } from "@locus-ui/components";
-import { emailStyles } from "./email-styles";
+import { emailStyles } from "../email-styles";
 
-export interface ReceiptEmailProps {
+export interface PasswordChangedEmailProps {
   firstName: string;
-  orderNumber: string;
-  items: { name: string; amount: string }[];
-  total: string;
-  receiptUrl: string;
+  changedAt: string;
+  supportUrl: string;
 }
 
 export const previewData = {
   firstName: "Wally",
-  orderNumber: "DEMO-1042",
-  items: [
-    { name: "Monthly subscription", amount: "$24.00" },
-    { name: "Tax", amount: "$3.12" },
-  ],
-  total: "$27.12 CAD",
-  receiptUrl: "https://example.com/receipts/demo-1042",
-} satisfies ReceiptEmailProps;
+  changedAt: "November 7, 2026 at 10:30 AM EST",
+  supportUrl: "https://example.com/support/account-security",
+} satisfies PasswordChangedEmailProps;
 
-export default function ReceiptEmail({
+export default function PasswordChangedEmail({
   firstName,
-  orderNumber,
-  items,
-  total,
-  receiptUrl,
-}: ReceiptEmailProps) {
+  changedAt,
+  supportUrl,
+}: PasswordChangedEmailProps) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Your receipt</title>
+        <title>Your password has changed</title>
         <style>{emailStyles}</style>
       </head>
       <body>
@@ -44,23 +35,16 @@ export default function ReceiptEmail({
             style={{ maxWidth: 600, fontFamily: "Arial, sans-serif" }}
           >
             <Text as="h1" size="xl" weight="bold" mt="0" mb="6">
-              Thanks for your purchase, {firstName}!
+              Your password has changed
             </Text>
             <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              Order {orderNumber}
+              Hi {firstName}, your password was updated on {changedAt}.
             </Text>
-            {items.map((item, index) => (
-              <Text
-                key={`${item.name}-${index}`}
-                mt="0"
-                mb="5"
-                style={{ lineHeight: 1.7 }}
-              >
-                {item.name}: {item.amount}
-              </Text>
-            ))}
-            <Text mt="0" mb="5" weight="bold" style={{ lineHeight: 1.7 }}>
-              Total: {total}
+            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
+              If you made this change, there’s nothing else you need to do.
+            </Text>
+            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
+              If this wasn’t you, contact support to secure your account.
             </Text>
             <Text
               mt="0"
@@ -68,7 +52,7 @@ export default function ReceiptEmail({
               style={{ lineHeight: 1.7, textAlign: "center" }}
             >
               <a
-                href={receiptUrl}
+                href={supportUrl}
                 style={{
                   display: "inline-block",
                   backgroundColor: "#fc7f0a",
@@ -79,7 +63,7 @@ export default function ReceiptEmail({
                   fontWeight: 700,
                 }}
               >
-                View receipt
+                Contact support
               </a>
             </Text>
           </Box>

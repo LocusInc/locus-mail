@@ -11,5 +11,5 @@
     "outDir": "build",
     "rootDir": "."
   },
-  "include": ["*.ts", "emails/**/*.tsx"]
+  "include": ["*.ts", "emails/**/*.ts", "emails/**/*.tsx"]
 }

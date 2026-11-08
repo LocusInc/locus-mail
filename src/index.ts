@@ -1,4 +1,3 @@
-export { z } from "zod";
 export { defineConfig } from "./config";
 export type { MailConfig } from "./config";
 export { email } from "./email";

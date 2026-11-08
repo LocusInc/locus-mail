@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createMailer, createResendTransport, email, MailSendError, ResendDeliveryError, z, type DeliveryMessage } from "../src";
+import { createMailer, createResendTransport, email, MailSendError, ResendDeliveryError, type DeliveryMessage } from "../src";
+import { z } from "zod";
 
 function notification(mode: "ready" | "skip" | "invalid" | "render-error" = "ready") {
   return email({

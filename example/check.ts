@@ -4,18 +4,32 @@ import {
   MailSendError,
   renderPreview,
   type DeliveryMessage,
-} from "locus-mail";
+} from "@locus-ui/mail";
 import assert from "node:assert/strict";
-import RegistrationEmail, { previewData } from "./emails/register.email";
-import { registration } from "./registration";
+import { previewData as invitationData } from "./emails/invitation/invitation.email";
+import { sendInvitationEmail } from "./emails/invitation/send-invitation-email";
+import { previewData as passwordChangedData } from "./emails/password-changed/password-changed.email";
+import { sendPasswordChangedEmail } from "./emails/password-changed/send-password-changed-email";
+import { previewData as receiptData } from "./emails/receipt/receipt.email";
+import { sendReceiptEmail } from "./emails/receipt/send-receipt-email";
+import RegistrationEmail, {
+  previewData,
+} from "./emails/register/register.email";
+import {
+  registration,
+  sendRegistrationEmail,
+} from "./emails/register/send-registration-email";
+import { previewData as resetPasswordData } from "./emails/reset-password/reset-password.email";
+import { sendResetPasswordEmail } from "./emails/reset-password/send-reset-password-email";
 
 const input = {
   firstName: "Wally",
   verificationUrl: "https://example.com/verify/real",
-  recipient: "wally@example.com",
+  to: "wally@example.com",
 };
 
 async function check() {
+  assert.equal(Object.hasOwn(await import("@locus-ui/mail"), "z"), false);
   const messages: DeliveryMessage[] = [];
   const mailer = createMailer({
     from: "Locus <mail@example.com>",
@@ -28,7 +42,7 @@ async function check() {
     },
   });
 
-  assert.deepEqual(await mailer.send(registration, input), {
+  assert.deepEqual(await sendRegistrationEmail(input, mailer), {
     status: "sent",
     templateId: "register",
     provider: "mock",
@@ -42,7 +56,7 @@ async function check() {
       verificationUrl: input.verificationUrl,
     }).html,
   );
-  assert.deepEqual(messages[0].to, [input.recipient]);
+  assert.deepEqual(messages[0].to, [input.to]);
   assert.match(messages[0].text, /verify\/real/);
   assert.match(
     renderPreview(RegistrationEmail, previewData).html,
@@ -50,10 +64,10 @@ async function check() {
   );
 
   await assert.rejects(
-    mailer.send(registration, { ...input, recipient: "invalid" }),
+    mailer.send(registration, { ...input, to: "invalid" }),
     (error: unknown) => {
       assert.ok(error instanceof MailSendError);
-      assert.equal(error.stage, "preparation");
+      assert.equal(error.stage, "validation");
       return true;
     },
   );
@@ -75,6 +89,27 @@ async function check() {
   }).send(registration, input);
   assert.equal(result.status, "sent");
   assert.equal(requests, 1);
+  const results = [
+    await sendInvitationEmail({ ...invitationData, to: input.to }, mailer),
+    await sendPasswordChangedEmail(
+      { ...passwordChangedData, to: input.to },
+      mailer,
+    ),
+    await sendReceiptEmail({ ...receiptData, to: input.to }, mailer),
+    await sendResetPasswordEmail(
+      { ...resetPasswordData, to: input.to },
+      mailer,
+    ),
+  ];
+
+  assert.ok(results.every((result) => result.status === "sent"));
+  assert.equal(messages.length, 5);
+
+  for (const message of messages) {
+    assert.match(message.html, /Wally/);
+    assert.match(message.text, /Wally/);
+    assert.deepEqual(message.to, [input.to]);
+  }
   console.log(
     "Consumer imports, rendering, runtime validation, mock transport, and mocked Resend passed.",
   );

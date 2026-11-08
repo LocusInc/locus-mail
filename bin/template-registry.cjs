@@ -137,7 +137,8 @@ function createRegistry({ root, paths = ["**/*.email.tsx"], previewSend }) {
         throw new Error("Select a valid template before sending a test email.");
       }
 
-      const { createMailer, email, z } = require("../dist/index.js");
+      const { createMailer, email } = require("../dist/index.js");
+      const { z } = require("zod");
       const recipient = z.email().parse(to);
       const subject = `[Preview] ${entry.source.replace(/\.email\.tsx?$/, "").split("/").pop()}`;
       const definition = email({

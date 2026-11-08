@@ -2,12 +2,13 @@
   "name": "locus-mail-consumer-example",
   "private": true,
   "scripts": {
+    "prepreview": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json && node build/check.js",
     "preview": "locus-mail"
   },
   "dependencies": {
     "@locus-ui/components": "^0.1.19",
-    "locus-mail": "file:../.."
+    "@locus-ui/mail": "file:.."
   },
   "devDependencies": {
     "@types/node": "^20"

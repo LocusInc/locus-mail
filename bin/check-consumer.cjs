@@ -27,7 +27,7 @@ async function main() {
 
   try {
     await run("npm", ["pack", "--pack-destination", temporary], root);
-    await cp(join(root, "examples/consumer"), consumer, {
+    await cp(join(root, "example"), consumer, {
       recursive: true,
       filter: (source) => {
         const name = basename(source);
@@ -35,8 +35,12 @@ async function main() {
       },
     });
     const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
-    await run("npm", ["install", join(temporary, `locus-mail-${manifest.version}.tgz`), "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund"], consumer);
-    const installed = JSON.parse(await readFile(join(consumer, "node_modules/locus-mail/package.json"), "utf8"));
+    const tarballName = `${manifest.name.replace(/^@/, "").replaceAll("/", "-")}-${manifest.version}.tgz`;
+    await run("npm", ["install", join(temporary, tarballName), "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund"], consumer);
+    const installed = JSON.parse(await readFile(join(consumer, "node_modules/@locus-ui/mail/package.json"), "utf8"));
+    assert.equal(installed.name, "@locus-ui/mail");
+    assert.deepEqual(Object.keys(installed.bin), ["locus-mail"]);
+    assert.equal(installed.bin["locus-mail"].replace(/^\.\//, ""), "bin/locus-mail.cjs");
 
     for (const dependency of ["tailwindcss", "@tailwindcss/postcss"]) {
       assert.ok(installed.dependencies[dependency], `${dependency} must be a required runtime dependency.`);
@@ -66,7 +70,7 @@ async function main() {
     const port = listener.address().port;
     await new Promise((resolveClose) => listener.close(resolveClose));
 
-    preview = spawn(process.execPath, ["node_modules/locus-mail/bin/locus-mail.cjs", "--port", String(port), "--config", previewConfig], { cwd: consumer, stdio: ["ignore", "pipe", "pipe"] });
+    preview = spawn(process.execPath, ["node_modules/.bin/locus-mail", "--port", String(port), "--config", previewConfig], { cwd: consumer, stdio: ["ignore", "pipe", "pipe"] });
     previewExit = once(preview, "exit");
 
     for (const stream of [preview.stdout, preview.stderr]) {
@@ -98,8 +102,8 @@ async function main() {
 
     assert.ok(snapshot, `Preview did not start.\n${logs}`);
     assert.deepEqual(snapshot.templates.map((entry) => entry.source).sort(), [
-      "emails/invitation.email.tsx", "emails/password-changed.email.tsx", "emails/receipt.email.tsx",
-      "emails/register.email.tsx", "emails/reset-password.email.tsx",
+      "emails/invitation/invitation.email.tsx", "emails/password-changed/password-changed.email.tsx", "emails/receipt/receipt.email.tsx",
+      "emails/register/register.email.tsx", "emails/reset-password/reset-password.email.tsx",
     ]);
 
     for (const entry of snapshot.templates) {
@@ -111,8 +115,8 @@ async function main() {
       assert.match((await response.json()).html, /Wally/);
     }
 
-    const template = snapshot.templates.find((entry) => entry.source === "emails/register.email.tsx");
-    assert.equal(template.source, "emails/register.email.tsx");
+    const template = snapshot.templates.find((entry) => entry.source === "emails/register/register.email.tsx");
+    assert.equal(template.source, "emails/register/register.email.tsx");
     assert.equal(template.status, "ready", template.error);
     assert.equal(template.previewData.firstName, "Wally");
     assert.equal(snapshot.testSendConfigured, true);
@@ -135,7 +139,7 @@ async function main() {
 
     assert.match((await render(template.previewData)).html, /Welcome, Wally/);
     assert.match((await render({ ...template.previewData, firstName: "Consumer edit" })).html, /Welcome, Consumer edit/);
-    const source = join(consumer, "emails/register.email.tsx");
+    const source = join(consumer, "emails/register/register.email.tsx");
     await writeFile(source, (await readFile(source, "utf8")).replace('firstName: "Wally"', 'firstName: "Live update"'));
     const refreshed = await (await fetch(`${base}/api/templates`)).json();
     assert.notEqual(refreshed.revision, snapshot.revision);

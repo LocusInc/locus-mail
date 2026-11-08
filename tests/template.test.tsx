@@ -3,12 +3,13 @@ import test from "node:test";
 import { useId } from "react";
 import RegistrationEmail, {
   previewData,
-} from "../examples/consumer/emails/register.email";
+} from "../example/emails/register/register.email";
 import {
   createRegistrationEmail,
   type RegistrationData,
-} from "../examples/consumer/notifications/registration-created.notification";
-import { email, renderPreview, z } from "../src";
+} from "./fixtures/registration";
+import { email, renderPreview } from "../src";
+import { z } from "zod";
 
 const input = { registrationId: "registration-123" };
 const registration: RegistrationData = {

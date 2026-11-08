@@ -1,8 +1,8 @@
 // Compile-only assertions. An unused @ts-expect-error fails `npm run typecheck`.
 import RegistrationEmail, {
   previewData,
-} from "../examples/consumer/emails/register.email";
-import { createRegistrationEmail } from "../examples/consumer/notifications/registration-created.notification";
+} from "../example/emails/register/register.email";
+import { createRegistrationEmail } from "./fixtures/registration";
 import {
   createMailer,
   email,

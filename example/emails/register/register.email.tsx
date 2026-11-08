@@ -1,32 +1,29 @@
 import { Box, Text } from "@locus-ui/components";
-import { emailStyles } from "./email-styles";
+import { emailStyles } from "../email-styles";
 
-export interface ResetPasswordEmailProps {
+export interface RegistrationProps {
   firstName: string;
-  resetUrl: string;
-  expiresInMinutes: number;
-  organizationName: string;
+  verificationUrl: string;
+  organizationName?: string;
 }
 
-export const previewData = {
+export const previewData: RegistrationProps = {
   firstName: "Wally",
-  resetUrl: "https://example.com/reset-password?token=preview-only",
-  expiresInMinutes: 30,
+  verificationUrl: "https://example.com/verify/preview",
   organizationName: "Locus Mail",
-} satisfies ResetPasswordEmailProps;
+};
 
-export default function ResetPasswordEmail({
+export default function RegistrationEmail({
   firstName,
-  resetUrl,
-  expiresInMinutes,
+  verificationUrl,
   organizationName,
-}: ResetPasswordEmailProps) {
+}: RegistrationProps) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Reset your password</title>
+        <title>Confirm your registration</title>
         <style>{emailStyles}</style>
       </head>
       <body>
@@ -38,14 +35,12 @@ export default function ResetPasswordEmail({
             style={{ maxWidth: 600, fontFamily: "Arial, sans-serif" }}
           >
             <Text as="h1" size="xl" weight="bold" mt="0" mb="6">
-              Reset your password
+              Welcome, {firstName}!
             </Text>
             <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              Hi {firstName},
-            </Text>
-            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              We received a request to reset the password for your{" "}
-              {organizationName} account.
+              Thanks for registering
+              {organizationName ? ` at ${organizationName}` : ""}. Confirm your
+              email address to get started.
             </Text>
             <Text
               mt="0"
@@ -53,7 +48,7 @@ export default function ResetPasswordEmail({
               style={{ lineHeight: 1.7, textAlign: "center" }}
             >
               <a
-                href={resetUrl}
+                href={verificationUrl}
                 style={{
                   display: "inline-block",
                   backgroundColor: "#fc7f0a",
@@ -64,15 +59,11 @@ export default function ResetPasswordEmail({
                   fontWeight: 700,
                 }}
               >
-                Reset password
+                Confirm registration
               </a>
             </Text>
             <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              This link expires in {expiresInMinutes} minutes.
-            </Text>
-            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              If you did not request a password reset, you can ignore this
-              email. Your password will stay the same.
+              If you did not register, you can ignore this email.
             </Text>
           </Box>
         </div>

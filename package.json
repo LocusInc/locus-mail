@@ -1,6 +1,9 @@
 {
-  "name": "locus-mail",
+  "name": "@locus-ui/mail",
   "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

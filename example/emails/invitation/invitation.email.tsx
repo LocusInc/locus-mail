@@ -1,29 +1,32 @@
 import { Box, Text } from "@locus-ui/components";
-import { emailStyles } from "./email-styles";
+import { emailStyles } from "../email-styles";
 
-export interface PasswordChangedEmailProps {
+export interface InvitationEmailProps {
   firstName: string;
-  changedAt: string;
-  supportUrl: string;
+  inviterName: string;
+  organizationName: string;
+  invitationUrl: string;
 }
 
 export const previewData = {
   firstName: "Wally",
-  changedAt: "November 7, 2026 at 10:30 AM EST",
-  supportUrl: "https://example.com/support/account-security",
-} satisfies PasswordChangedEmailProps;
+  inviterName: "Alex",
+  organizationName: "Locus Mail",
+  invitationUrl: "https://example.com/invitation?token=preview-only",
+} satisfies InvitationEmailProps;
 
-export default function PasswordChangedEmail({
+export default function InvitationEmail({
   firstName,
-  changedAt,
-  supportUrl,
-}: PasswordChangedEmailProps) {
+  inviterName,
+  organizationName,
+  invitationUrl,
+}: InvitationEmailProps) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Your password has changed</title>
+        <title>You’re invited</title>
         <style>{emailStyles}</style>
       </head>
       <body>
@@ -35,16 +38,10 @@ export default function PasswordChangedEmail({
             style={{ maxWidth: 600, fontFamily: "Arial, sans-serif" }}
           >
             <Text as="h1" size="xl" weight="bold" mt="0" mb="6">
-              Your password has changed
+              You’re invited to {organizationName}
             </Text>
             <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              Hi {firstName}, your password was updated on {changedAt}.
-            </Text>
-            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              If you made this change, there’s nothing else you need to do.
-            </Text>
-            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
-              If this wasn’t you, contact support to secure your account.
+              Hi {firstName}, {inviterName} has invited you to join their team.
             </Text>
             <Text
               mt="0"
@@ -52,7 +49,7 @@ export default function PasswordChangedEmail({
               style={{ lineHeight: 1.7, textAlign: "center" }}
             >
               <a
-                href={supportUrl}
+                href={invitationUrl}
                 style={{
                   display: "inline-block",
                   backgroundColor: "#fc7f0a",
@@ -63,8 +60,12 @@ export default function PasswordChangedEmail({
                   fontWeight: 700,
                 }}
               >
-                Contact support
+                Accept invitation
               </a>
+            </Text>
+            <Text mt="0" mb="5" style={{ lineHeight: 1.7 }}>
+              If you weren’t expecting this invitation, you can ignore this
+              email.
             </Text>
           </Box>
         </div>

@@ -1,5 +1,6 @@
-import { email, z } from "../../../src";
-import RegistrationEmail from "../emails/register.email";
+import { email } from "../../src";
+import { z } from "zod";
+import RegistrationEmail from "../../example/emails/register/register.email";
 
 // The application owns data collection and validation; the React view only
 // declares the props it displays. This also checks values loaded from storage.

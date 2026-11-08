@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["locus-mail"],
+  transpilePackages: ["@locus-ui/mail"],
   logging: {
     incomingRequests: false,
   },
